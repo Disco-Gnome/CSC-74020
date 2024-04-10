@@ -28,7 +28,7 @@ def run_chatbot():
     model = st.session_state["generation_model"]
 
     # Start button
-    start_button = st.button("Click to build VDB") #click to build vector database / knowledge base
+    start_button = st.button("Click to build Vector Database") #click to build vector database / knowledge base
 
     if start_button:
         st.session_state["messages"] = []
@@ -37,7 +37,7 @@ def run_chatbot():
         docs = loader.load()
 
         # process time series data to save to knowledge base
-        create_knowledge_base(docs, faiss_dir="../data/faiss-db/")
+        create_knowledge_base(docs)
     
     # Store LLM generated responses
     if "messages" not in st.session_state.keys():
@@ -58,7 +58,7 @@ def run_chatbot():
     if st.session_state.messages and st.session_state.messages[-1]["role"] != "assistant":
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                retriever = get_retriever(faiss_dir="../data/faiss-db/", top_k=1)        
+                retriever = get_retriever()        
                 response = generate_kb_response(prompt, model, retriever, system_prompt="",template=None, temperature=0)
                 st.write(response) 
         message = {"role": "assistant", "content": response}

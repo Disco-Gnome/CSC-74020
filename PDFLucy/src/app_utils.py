@@ -59,20 +59,10 @@ def get_embedding(sentence):
         print(e)
         return np.zeros(384)
 
-def get_retriever(faiss_dir, top_k=1):
-    db = FAISS.load_local(faiss_dir, embedding_function, allow_dangerous_deserialization=True)
-    retriever = VectorStoreRetriever(vectorstore=db, search_kwargs={"k": top_k})
+def get_retriever():
+    db = FAISS.load_local("../data/faiss-db/", embedding_function, allow_dangerous_deserialization=True)
+    retriever = VectorStoreRetriever(vectorstore=db, search_kwargs={"k": 1})
     return retriever
-
-# make sure load_dotenv is run from main app file first
-if os.getenv('OPENAI_API_KEY'):
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-if os.getenv('OPENAI_API_BASE'):
-    openai.api_base = os.getenv('OPENAI_API_BASE')
-if os.getenv('OPENAI_API_TYPE'):
-    openai.api_type = os.getenv('OPENAI_API_TYPE')
-if os.getenv('OPENAI_API_VERSION'):
-    openai.api_version = os.getenv('OPENAI_API_VERSION')
 
 def initialize_session_state():
     """ Initialise all session state variables with defaults """
@@ -130,7 +120,7 @@ def generate_response(prompt, model, system_prompt="", temperature=0, second_try
     return response
 
 
-def create_knowledge_base(docs, faiss_dir="../data/faiss-db/"):
+def create_knowledge_base(docs):
     """Create knowledge base for chatbot."""
 
     print(f"Loading {PROCESSED_DOCUMENTS_DIR}")
@@ -154,7 +144,7 @@ def create_knowledge_base(docs, faiss_dir="../data/faiss-db/"):
     )
     db = FAISS.from_texts(texts, embedding_function, metadatas=metadatas)  
     # Save the FAISS db 
-    db.save_local(faiss_dir)
+    db.save_local("../data/faiss-db/")
 
     print(f"FAISS VectorDB has {db.index.ntotal} documents")
     
