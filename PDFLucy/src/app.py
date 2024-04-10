@@ -27,8 +27,6 @@ with st.sidebar:
     st.session_state["temperature"] = temperature
 
     st.session_state["generation_model"]=model
-    st.session_state["general_context"] = st.text_area(f"Enter extra prompt details (added to the beginning of all prompts)", "You are a helpful assistant answering questions from the provided context.")+" "
-
 
 #don't have it appear until responses are generated
 clear_button = None

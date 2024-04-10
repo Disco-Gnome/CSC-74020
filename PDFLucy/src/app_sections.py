@@ -12,8 +12,6 @@ from app_utils import embedding_function, get_retriever, generate_response, init
 
 def run_upload_and_settings():
     """This function runs the upload and settings container"""
-    #this is not used, but you could add an input and add to prompt to change the general context
-    general_context = st.session_state["general_context"] 
 
     uploaded_file = st.file_uploader("Choose a file")
 
@@ -27,13 +25,13 @@ def run_upload_and_settings():
 
 def run_chatbot():
     template=""
-    general_context = st.session_state["general_context"]
     model = st.session_state["generation_model"]
 
     # Start button
     start_button = st.button("Click to build VDB") #click to build vector database / knowledge base
 
     if start_button:
+        st.session_state["messages"] = []
         # read and load 10k pdf file
         loader = UnstructuredPDFLoader(os.path.join("../data/raw/",st.session_state["uploaded_file"]))
         docs = loader.load()

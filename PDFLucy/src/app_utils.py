@@ -82,7 +82,6 @@ def initialize_session_state():
         "chat_history": [],
         "uploaded_file": None,
         "generation_model": MODELS[0],
-        "general_context": "",
         "temperature": TEMPERATURE,
         "max_tokens": MAX_TOKENS,
         "messages": []
