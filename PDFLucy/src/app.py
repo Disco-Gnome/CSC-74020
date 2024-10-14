@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from config import MODELS, TEMPERATURE, MAX_TOKENS, APP_NAME
+from config import MODELS, TEMPERATURE, MAX_TOKENS, APP_NAME, EMBEDDING_MODELS
 from app_utils import initialize_session_state
 from app_sections import run_upload_and_settings,  run_chatbot
 
@@ -27,6 +27,11 @@ with st.sidebar:
     st.session_state["temperature"] = temperature
 
     st.session_state["generation_model"]=model
+
+    emb_model = st.selectbox(f"Select Retrieval Approach", EMBEDDING_MODELS)
+    st.session_state["embedding_model"]=emb_model
+
+
 
 #don't have it appear until responses are generated
 clear_button = None

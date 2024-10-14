@@ -44,26 +44,6 @@ if os.getenv('OPENAI_API_VERSION'):
     openai.api_version = os.getenv('OPENAI_API_VERSION')
 
 
-# USE THIS EMBEDDING FUNCTION THROUGHOUT THIS FILE
-# Will download the model the first time it runs
-embedding_function = HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODELS[0],
-        cache_folder="../models/sentencetransformers"
-    )  
-
-# get embedding for one sentence
-def get_embedding(sentence):
-    try:
-        return embedding_function.embed_documents([sentence])[0]
-    except Exception as e:
-        print(e)
-        return np.zeros(384)
-
-def get_retriever():
-    db = FAISS.load_local("../data/faiss-db/", embedding_function, allow_dangerous_deserialization=True)
-    retriever = VectorStoreRetriever(vectorstore=db, search_kwargs={"k": 1})
-    return retriever
-
 def initialize_session_state():
     """ Initialise all session state variables with defaults """
     SESSION_DEFAULTS = {
@@ -74,12 +54,82 @@ def initialize_session_state():
         "generation_model": MODELS[0],
         "temperature": TEMPERATURE,
         "max_tokens": MAX_TOKENS,
-        "messages": []
+        "messages": [],
+        "embedding_model": EMBEDDING_MODELS[0],
     }
 
     for k, v in SESSION_DEFAULTS.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
+# USE THIS EMBEDDING FUNCTION THROUGHOUT THIS FILE
+# Will download the model the first time it runs
+embedding_function = HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODELS[0],
+        cache_folder="../models/sentencetransformers"
+    )  
+
+bm25_retriever = None
+
+class BM25:
+    def __init__(self, corpus: list[list[str]], k1: float = 1.2, b: float = 0.75, k=1):
+        self.corpus = corpus
+        self.k1 = k1
+        self.b = b
+        self.avgdl = sum(len(doc) for doc in corpus) / len(corpus)
+        self.doc_freqs = self._calculate_doc_freqs()
+        self.idf = self._calculate_idf()
+        self.doc_lengths = [len(doc) for doc in corpus]
+        self.k = k # this k is the number of documents to return
+
+    def _calculate_doc_freqs(self) -> dict[str, int]:
+        doc_freqs = {}
+        for doc in self.corpus:
+            for term in set(doc):
+                doc_freqs[term] = doc_freqs.get(term, 0) + 1
+        return doc_freqs
+
+    def _calculate_idf(self) -> dict[str, float]:
+        idf = {}
+        num_docs = len(self.corpus)
+        for term, freq in self.doc_freqs.items():
+            idf[term] = math.log((num_docs - freq + 0.5) / (freq + 0.5) + 1)
+        return idf
+
+    def _score_document(self, query: list[str], doc_index: int) -> float:
+        score = 0
+        doc = self.corpus[doc_index]
+        doc_len = self.doc_lengths[doc_index]
+
+        for term in query:
+            if term not in doc:
+                continue
+            tf = doc.count(term)
+            numerator = self.idf[term] * tf * (self.k1 + 1)
+            denominator = tf + self.k1 * (1 - self.b + self.b * doc_len / self.avgdl)
+            score += numerator / denominator
+
+        return score
+
+    def get_relevant_documents(self, query: str):
+        #return the top k documents ... currently just returning the first k documents (change this)
+        top_docs = self.corpus[:self.k]
+
+        ####### YOUR CODE HERE ########
+        ####### YOUR CODE HERE ########
+        ####### YOUR CODE HERE ########
+
+        return top_docs
+
+def get_retriever():
+    k=1
+    global bm25_retriever
+    if st.session_state["embedding_model"]=="BM25":
+        bm25_retriever.k = k
+        return bm25_retriever
+    db = FAISS.load_local("../data/faiss-db/", embedding_function, allow_dangerous_deserialization=True)
+    retriever = VectorStoreRetriever(vectorstore=db, search_kwargs={"k": k})
+    return retriever
 
 
 def num_tokens_from_string(string: str) -> int:
@@ -137,6 +187,12 @@ def create_knowledge_base(docs):
 
     texts = [doc.page_content for doc in docs]
     metadatas = [doc.metadata for doc in docs]
+
+    if st.session_state["embedding_model"]=="BM25":
+        global bm25_retriever
+        bm25_retriever = BM25(texts)
+        return
+
     print("""
         Computing embedding vectors and building FAISS db.
         WARNING: This may take a long time. You may want to increase the number of CPU's in your noteboook.

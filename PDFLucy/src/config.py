@@ -3,7 +3,7 @@ MODELS = ["OpenAI: gpt-3.5-turbo", "OpenAI: gpt-3.5-turbo-16k", "OpenAI: gpt-4",
           "Anthropic: claude-3-opus-20240229","Google: gemini-pro"]
 
 #the code will only use the first model listed currently
-EMBEDDING_MODELS = ["all-MiniLM-L6-v2"]
+EMBEDDING_MODELS = ["all-MiniLM-L6-v2", "BM25"]
 
 TEMPERATURE = .5
 
