@@ -1,12 +1,11 @@
 import pandas as pd
 import streamlit as st
 import os
-import json
-import csv
 import tiktoken
 import numpy as np
 import time
 import re
+import math
 
 #sklearn cosine similarity
 from sklearn.metrics.pairwise import cosine_similarity
@@ -17,7 +16,7 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores.faiss import FAISS
 from langchain.vectorstores.base import VectorStoreRetriever
 
-from config import MODELS, TEMPERATURE, MAX_TOKENS, EMBEDDING_MODELS, PROCESSED_DOCUMENTS_DIR, REPORTS_DOCUMENTS_DIR
+from config import MODELS, TEMPERATURE, MAX_TOKENS, EMBEDDING_MODELS, PROCESSED_DOCUMENTS_DIR, REPORTS_DOCUMENTS_DIR, STOP_WORD_LIST
 
 from dotenv import load_dotenv
 # Load environment variables
@@ -72,14 +71,15 @@ embedding_function = HuggingFaceEmbeddings(
 bm25_retriever = None
 
 class BM25:
-    def __init__(self, corpus: list[list[str]], k1: float = 1.2, b: float = 0.75, k=1):
-        self.corpus = corpus
+    def __init__(self, docs: list[str], k1: float = 1.2, b: float = 0.75, k=1):
+        self.docs = docs
+        self.corpus = [[word for word in text.lower().split() if word not in STOP_WORD_LIST] for text in docs]
         self.k1 = k1
         self.b = b
-        self.avgdl = sum(len(doc) for doc in corpus) / len(corpus)
+        self.avgdl = sum(len(doc) for doc in self.corpus ) / len(self.corpus )
         self.doc_freqs = self._calculate_doc_freqs()
         self.idf = self._calculate_idf()
-        self.doc_lengths = [len(doc) for doc in corpus]
+        self.doc_lengths = [len(doc) for doc in self.corpus ]
         self.k = k # this k is the number of documents to return
 
     def _calculate_doc_freqs(self) -> dict[str, int]:
@@ -113,7 +113,8 @@ class BM25:
 
     def get_relevant_documents(self, query: str):
         #return the top k documents ... currently just returning the first k documents (change this)
-        top_docs = self.corpus[:self.k]
+        top_docs = self.docs[:self.k]
+        query_keywords = [word for word in query.lower().split() if word not in STOP_WORD_LIST]
 
         ####### YOUR CODE HERE ########
         ####### YOUR CODE HERE ########

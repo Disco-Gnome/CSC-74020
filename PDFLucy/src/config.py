@@ -15,3 +15,10 @@ APP_NAME = "I'm Lucy - helping you chat with your PDF"
 # make sure to include the trailing slash
 PROCESSED_DOCUMENTS_DIR = "../data/processed/"
 REPORTS_DOCUMENTS_DIR = "../data/reports/"
+
+
+STOP_WORD_LIST = ['what', 'are', 'is', 'the', 'of', 'in', 'to', 'and', 'a', 'for', 'on', 'with', 'how', 'that', 'by', 'as', 'from', 'this', 'at', 'an', 'be', 'it', 
+                          'or', 'which', 'can', 'you', 'your', 'we', 'our', 'us', 'they', 'their', 'he', 'she', 'his', 'her', 'him', 'i', 'my', 'me', 'them', 'there', 'these', 
+                          'those', 'if', 'then', 'than', 'so', 'not', 'no', 'yes', 'also', 'only', 'just', 'but', 'however', 'more', 'most', 'all', 'any', 'some', 'many', 'much', 
+                          'few', 'several', 'other', 'another', 'each', 'every', 'own', 'same', 'different', 'such', 'like', 'likely', 'unlikely', 'will', 'would', 'should', 'could', 
+                          'can', 'may', 'might', 'must', 'shall', 'do', 'does', 'did', 'done']
