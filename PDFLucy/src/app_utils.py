@@ -24,23 +24,23 @@ load_dotenv()
 
 # Import the necessary modules to work with the APIs
 ###### FEEL FREE TO COMMENT OUT PACKAGES YOU DON'T NEED ######
-from anthropic import Anthropic
+# from anthropic import Anthropic
 import google.generativeai as genai
-import openai
+# import openai
 
 anth_client=None
-if os.getenv('ANTHROPIC_API_KEY'):
-    anth_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+# if os.getenv('ANTHROPIC_API_KEY'):
+#     anth_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 if os.getenv('GOOGLE_GEMINI_API_KEY'):
     genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
-if os.getenv('OPENAI_API_KEY'):
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-if os.getenv('OPENAI_API_BASE'):
-    openai.api_base = os.getenv('OPENAI_API_BASE')
-if os.getenv('OPENAI_API_TYPE'):
-    openai.api_type = os.getenv('OPENAI_API_TYPE')
-if os.getenv('OPENAI_API_VERSION'):
-    openai.api_version = os.getenv('OPENAI_API_VERSION')
+# if os.getenv('OPENAI_API_KEY'):
+#     openai.api_key = os.getenv('OPENAI_API_KEY')
+# if os.getenv('OPENAI_API_BASE'):
+#     openai.api_base = os.getenv('OPENAI_API_BASE')
+# if os.getenv('OPENAI_API_TYPE'):
+#     openai.api_type = os.getenv('OPENAI_API_TYPE')
+# if os.getenv('OPENAI_API_VERSION'):
+#     openai.api_version = os.getenv('OPENAI_API_VERSION')
 
 
 def initialize_session_state():
@@ -113,17 +113,27 @@ class BM25:
 
     def get_relevant_documents(self, query: str):
         #return the top k documents ... currently just returning the first k documents (change this)
-        top_docs = self.docs[:self.k]
+        # for Part A question 6, I could just arbitrarily add to k to increase context prior to implementing BM25
+        # top_docs = self.docs[:self.k]
         query_keywords = [word for word in query.lower().split() if word not in STOP_WORD_LIST]
 
-        ####### YOUR CODE HERE ########
-        ####### YOUR CODE HERE ########
-        ####### YOUR CODE HERE ########
+        # Compute scores for each document using the BM25 algo
+        BM25_scores = [(index, self._score_document(query_keywords, index)) for index in range(len(self.docs))]
+
+        # Sort documents by BM25 score descending
+        BM25_scores.sort(key=lambda x: x[1],
+                         reverse=True)
+
+        # Select the top k docs by score
+        top_docs_indices = [index for index, _ in BM25_scores[:self.k]]
+
+        # Retrieve the top documents
+        top_docs = [Document(page_content=self.docs[index]) for index in top_docs_indices]
 
         return top_docs
 
 def get_retriever():
-    k=1
+    k=10
     global bm25_retriever
     if st.session_state["embedding_model"]=="BM25":
         bm25_retriever.k = k
@@ -150,16 +160,37 @@ def generate_response(prompt, model, system_prompt="", temperature=0, second_try
     try:
         if model.startswith("Google: "):
             model_name = model[8:]
-            response = "Not implemented yet."
-            ####### YOUR CODE HERE ########
+
+            # Create the model
+            generation_config = {
+                "temperature": TEMPERATURE,
+                "max_output_tokens": MAX_TOKENS,
+            }
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                generation_config=generation_config,
+            )
+            response = model.generate_content(prompt).text
         elif model.startswith("OpenAI: "):
             model_name = model[8:]
-            response = "Not implemented yet."
-            ####### YOUR CODE HERE ########
+            print("Program not equipped with permissions to use OpenAI API; Google only!")
+            # There are multiple options for text generation with openAI, I'm using Creation.create because it
+            # is recommended for prompts, rather than simple chat.
+            # response = openai.completions.create(
+            #     model=model_name,
+            #     prompt=prompt,
+            #     temperature=TEMPERATURE,
+            #     max_tokens=MAX_TOKENS
+            # ).choices[0].text
         elif model.startswith("Anthropic: "):
-            model_name = model[11:]
-            response = "Not implemented yet."
-            ####### YOUR CODE HERE ########
+            print("Program not equipped with permissions to use Anthropic; Google only!")
+            # model_name = model[11:]
+            # response = Anthropic.completions.create(
+            #     model=model_name,
+            #     max_tokens_to_sample=MAX_TOKENS,
+            #     temperature=TEMPERATURE,
+            #     prompt=prompt
+            # )
         else:
             response = "Not implemented yet."
         ###### FEEL FREE TO USE OTHER LLMs #########
@@ -179,11 +210,28 @@ def create_knowledge_base(docs):
         
     print(f"Splitting {len(docs_orig)} documents")
 
-    ###### ADD YOUR CODE HERE ######
-    ###### ADD YOUR CODE HERE ######
-    ###### ADD YOUR CODE HERE ######
-    ###### ADD YOUR CODE HERE ######
-        
+    # If I were to overhaul the whole app, I might allow 'chunk_size' and 'overlap' to be adjustable hyperparameters.
+    # But, since I want to minimize how much I'm altering the given code, and I cannot alter any of the other files
+    # I will assign those variables arbitrarily here and include write my code as if these were hyperparameters.
+    chunk_size = 1000
+    overlap = 200
+
+    # I initialize my splitter and chunked docs object. I chose to use RecursiveCharacterTextSpliter because it is the
+    # standard text splitter in langchain that splits text and allows for overlap
+    splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=overlap)
+
+    # Since later code implies that the original 'docs' is to have been overwritten with the chunked data, my chunking
+    # code will read from docs_orig, meanwhile 'docs' is cleared to be replaced with the chunked docs data.
+    docs = []
+
+    # I split each document into chunks and append to the chunked documents list
+    for doc in docs_orig:
+        # Split document into chunks
+        chunks_list = splitter.split_text(doc.page_content)
+        # Append these chunked docs to full chunked docs object (I save the metadata too since we call it later).
+        for chunk in chunks_list:
+            docs.append(Document(page_content=chunk, metadata=doc.metadata))
+
     print(f"Created {len(docs)} documents")
 
     texts = [doc.page_content for doc in docs]
