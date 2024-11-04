@@ -50,12 +50,19 @@ You need to have Python 3.8 or later to use this application. If you don't have 
 
 ## Usage
 
-To run the PDFLucy application:
+To run the PDFLucy application locally:
 
 ```bash
 cd src
 streamlit run app.py
 ```
+
+To run it in Docker:
+```bash
+docker build -t lucy .
+docker run -p 8501:8501 lucy
+```
+And open the app at http://localhost:8501/
 
 ## License
 
