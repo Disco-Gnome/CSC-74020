@@ -10,13 +10,14 @@ from langchain.document_loaders import UnstructuredPDFLoader
 from config import MODELS, TEMPERATURE, MAX_TOKENS, APP_NAME, PROCESSED_DOCUMENTS_DIR, REPORTS_DOCUMENTS_DIR
 from app_utils import embedding_function, get_retriever, generate_response, initialize_session_state, create_knowledge_base, generate_kb_response
 
+
 def run_upload_and_settings():
     """This function runs the upload and settings container"""
 
     uploaded_file = st.file_uploader("Choose a file")
 
     if uploaded_file is not None:
-        #copy the file to "raw" folder
+        # copy the file to "raw" folder
         with open(os.path.join("../data/raw/",uploaded_file.name),"wb") as f:
             f.write(uploaded_file.getbuffer())
 
@@ -24,7 +25,7 @@ def run_upload_and_settings():
 
 
 def run_chatbot():
-    template=""
+    template = ""
     model = st.session_state["generation_model"]
 
     # Start button
@@ -33,7 +34,7 @@ def run_chatbot():
     if start_button:
         st.session_state["messages"] = []
         # read and load 10k pdf file
-        loader = UnstructuredPDFLoader(os.path.join("../data/raw/",st.session_state["uploaded_file"]))
+        loader = UnstructuredPDFLoader(os.path.join("../data/raw/", st.session_state["uploaded_file"]))
         docs = loader.load()
 
         # process time series data to save to knowledge base
