@@ -1,6 +1,8 @@
 # Use a Docker-official Python image
 FROM python:3.10-bookworm
 
+COPY data/ ./data
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -8,12 +10,15 @@ WORKDIR /app
 # before we copy the rest of the project for optimization
 COPY requirements.txt .
 
+RUN apt-get update && apt-get install -y libgl1-mesa-glx
+
 # Install project dependencies
 RUN pip install -r requirements.txt
 
 # Copy the rest of the application code into the container
 COPY .env .
 COPY src/ ./
+
 
 # Make port 8501 available to the world outside this container because that is the streamlit default port
 EXPOSE 8501

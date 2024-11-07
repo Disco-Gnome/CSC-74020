@@ -256,9 +256,12 @@ def create_knowledge_base(docs):
 
 def generate_kb_response(prompt, model, retriever, system_prompt="",template=None, temperature=0):
 
-    relevant_docs = retriever.get_relevant_documents(prompt)
+    # relevant_docs = retriever.get_relevant_documents(prompt)
+    n_chunks = 3
+    relevant_docs = retriever.get_relevant_documents(prompt)[:n_chunks]
 
-    # string together the relevant documents
+
+# string together the relevant documents
     relevant_docs_str = ""
     for doc in relevant_docs:
         relevant_docs_str += doc.page_content + "\n\n"
